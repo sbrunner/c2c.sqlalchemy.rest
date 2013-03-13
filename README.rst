@@ -4,7 +4,9 @@ c2c.sqlalchemy.rest
 Use it
 ------
 
-In ``<project>/model.py``::
+In ``<project>/model.py``:
+
+.. code:: python
 
     from pyramid.security import Allow, Authenticated, ALL_PERMISSIONS
     class Object(Base):
@@ -16,7 +18,9 @@ In ``<project>/model.py``::
             (Allow, Authenticated, ('view')),
         ]
 
-In ``<project>/views/rest.py``::
+In ``<project>/views/rest.py``:
+
+.. code:: python
 
     from pyramid.view import view_config
     from c2c.sqlalchemy.rest import REST
@@ -47,7 +51,9 @@ In ``<project>/views/rest.py``::
     def obj_delete(request):
         return obj.delete(request)
 
-In ``<project>/__init__.py``::
+In ``<project>/__init__.py``:
+
+.. code:: python
 
     from pyramid.renderers import JSONP
     from c2c.sqlalchemy.rest import add_rest_routes
@@ -65,7 +71,9 @@ Build::
 Protocol
 --------
 
-Read many, ``GET`` on ``.../obj``::
+Read many, ``GET`` on ``.../obj``:
+
+.. code:: javascript
 
     {
         "objects": [{
@@ -77,7 +85,9 @@ Read many, ``GET`` on ``.../obj``::
         ]
     }
 
-Read one, ``GET`` on ``.../obj/{id}``::
+Read one, ``GET`` on ``.../obj/{id}``:
+
+.. code:: javascript
 
     {
         "id": id,
@@ -87,9 +97,13 @@ Read one, ``GET`` on ``.../obj/{id}``::
 
 Count, ``GET`` on ``.../obj/count``:
 
+.. code:: javascript
+
     23
 
-Create, ``POST`` on ``.../obj`` with data::
+Create, ``POST`` on ``.../obj`` with data:
+
+.. code:: javascript
 
     {
         "property": "value",
@@ -98,7 +112,9 @@ Create, ``POST`` on ``.../obj`` with data::
 
 and it will return the id.
 
-Update, ``PUT`` on ``.../obj/{id}`` with data::
+Update, ``PUT`` on ``.../obj/{id}`` with data:
+
+.. code:: javascript
 
     {
         "property": "value",
