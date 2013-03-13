@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from json import loads
+from sqlalchemy.orm.util import class_mapper
+from sqlalchemy.orm.properties import ColumnProperty
+from sqlalchemy.orm.exc import NoResultFound
+from pyramid.response import Response
+from pyramid.security import has_permission
 from pyramid.httpexceptions import HTTPNotFound, HTTPForbidden
 
 
@@ -61,7 +67,6 @@ class REST(object):
             o = query.one()
             return o
         except NoResultFound:
-
             raise HTTPNotFound("No %s found with id: %s." % (
                 self.mapped_class.__name__,
                 id
