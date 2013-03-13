@@ -4,9 +4,10 @@ c2c.sqlalchemy.rest
 Use it
 ------
 
-Example::
+In ``<project>/model.py``::
 
-    class Object(Base)
+    from pyramid.security import Allow, Authenticated, ALL_PERMISSIONS
+    class Object(Base):
         __tablename__ = 'object'
         __table_args__ = {'autoload':True}
         __acl__ = [
@@ -15,10 +16,11 @@ Example::
             (Allow, Authenticated, ('view')),
         ]
 
-    from pyramid.renderers import JSONP
-    config.add_renderer('jsonp', JSONP(param_name='callback'))
+In ``<project>/views/rest.py``::
 
-    from c2c.sqlalchemy.rest import REST, add_rest_routes
+    from pyramid.view import view_config
+    from c2c.sqlalchemy.rest import REST
+    from <project>.models import DBSession, Object
     obj = REST(DBSession, Object)
 
     @view_config(route_name='obj_read_many', renderer='jsonp')
@@ -37,6 +39,19 @@ Example::
     def obj_create(request):
         return obj.create(request)
 
+    @view_config(route_name='obj_update', renderer='jsonp')
+    def obj_update(request):
+        return obj.update(request)
+
+    @view_config(route_name='obj_delete', renderer='jsonp')
+    def obj_delete(request):
+        return obj.delete(request)
+
+In ``<project>/__init__.py``::
+
+    from pyramid.renderers import JSONP
+    from c2c.sqlalchemy.rest import add_rest_routes
+    config.add_renderer('jsonp', JSONP(param_name='callback'))
     add_rest_routes(config, 'obj', '/object')
 
 From source
@@ -46,3 +61,48 @@ Build::
 
     python bootstrap.py --distribute -v 1.7.1
     ./buildout/bin/buildout
+
+Protocol
+--------
+
+Read many, ``GET`` on ``.../obj``::
+
+    {
+        "objects": [{
+            "id": id,
+            "property": "value",
+            ...
+        },
+        ...
+        ]
+    }
+
+Read one, ``GET`` on ``.../obj/{id}``::
+
+    {
+        "id": id,
+        "property": "value",
+        ...
+    }
+
+Count, ``GET`` on ``.../obj/count``:
+
+    23
+
+Create, ``POST`` on ``.../obj`` with data::
+
+    {
+        "property": "value",
+        ...
+    }
+
+and it will return the id.
+
+Update, ``PUT`` on ``.../obj/{id}`` with data::
+
+    {
+        "property": "value",
+        ...
+    }
+
+Delete, ``DELETE`` on ``.../obj/{id}``.
