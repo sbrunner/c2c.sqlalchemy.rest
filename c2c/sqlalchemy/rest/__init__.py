@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 from json import loads
 from sqlalchemy.orm.util import class_mapper
+from sqlalchemy.ext.associationproxy import _AssociationList
 from sqlalchemy.orm.properties import ColumnProperty
 from sqlalchemy.orm.exc import NoResultFound
 from pyramid.response import Response
@@ -46,7 +48,12 @@ class REST(object):
     def _properties(self, obj):
         properties = {}
         for col in self.columns:
-            properties[col] = getattr(obj, col)
+            attr = getattr(obj, col)
+            if isinstance(attr, (datetime.date, datetime.datetime)):
+                attr = attr.isoformat()
+            elif isinstance(attr, _AssociationList):
+                attr = list(attr)
+            properties[col] = attr
         properties[self.id] = getattr(obj, self.id)
         return properties
 
