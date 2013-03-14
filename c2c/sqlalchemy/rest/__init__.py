@@ -59,9 +59,11 @@ class REST(object):
             }
         raise HTTPForbidden()
 
-    def _read_one(self, request):
+    def _read_one(self, request, session=None):
+        if not session:
+            session = self.session()
         id = request.matchdict.get('id', None)
-        query = self.session().query(self.mapped_class)
+        query = session.query(self.mapped_class)
         query = query.filter(getattr(self.mapped_class, self.id) == int(id))
         try:
             o = query.one()
@@ -103,19 +105,22 @@ class REST(object):
     def update(self, request):
         if has_permission('edit', self.mapped_class, request) \
                 or not hasattr(self.mapped_class, '__acl__'):
-            o = self._read_one(request)
+            session = self.session()
+            obj = self._read_one(request, session)
             body = loads(request.body)
             for col in self.columns:
                 if col in body:
                     setattr(obj, col, body[col])
             session.flush()
-            return obj
+            return Response(status_int=202)
         raise HTTPForbidden()
 
     def delete(self, request):
         if has_permission('delete', self.mapped_class, request) \
                 or not hasattr(self.mapped_class, '__acl__'):
-            o = self._read_one(request)
+            session = self.session()
+            obj = self._read_one(request, session)
             session.delete(obj)
+            session.flush()
             return Response(status_int=204)
         raise HTTPForbidden()

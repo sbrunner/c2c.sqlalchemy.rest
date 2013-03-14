@@ -43,7 +43,7 @@ In ``<project>/views/rest.py``:
     def obj_create(request):
         return obj.create(request)
 
-    @view_config(route_name='obj_update', renderer='jsonp')
+    @view_config(route_name='obj_update')
     def obj_update(request):
         return obj.update(request)
 
