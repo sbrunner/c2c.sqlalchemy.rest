@@ -1,0 +1,113 @@
+<html>
+<head>
+<title>Test REST</title>
+<script type="text/javascript" src="http://server/Ext/adapter/ext/ext-base-debug.js"></script>
+<script type="text/javascript" src="http://server/Ext/ext-all-debug.js"></script>
+</head>
+<body>
+<script>
+var requests = [];
+var index = 0;
+function next(result) {
+    if (result) {
+        document.write('<h3>');
+        document.write(requests[index-1].title);
+        document.write('</h3>');
+        document.write('<p>');
+        document.write(result.responseText);
+        document.write('</p>');
+    }
+    if (index < requests.length) {
+        if (requests[index].doOnResult) {
+            requests[index].doOnResult(result.responseText);
+        }
+        Ext.Ajax.request(requests[index])
+        index++;
+    }
+}
+requests.push({
+    title: 'Read many',
+    url: 'http://server/obj',
+    method: 'GET',
+    success: next
+});
+requests.push({
+    title: 'Count',
+    url: 'http://server/obj/count',
+    method: 'GET',
+    success: next
+});
+requests.push({
+    title: 'Create',
+    url: 'http://server/obj',
+    method: 'POST',
+    jsonData: {
+        attribute: 'a value'
+    },
+    success: next
+});
+var id = -1;
+requests.push({
+    title: 'Read one',
+    method: 'GET',
+    doOnResult: function(result) {
+        id = result;
+        requests[index].url = 'http://server/obj/' + id;
+    },
+    success: next
+});
+requests.push({
+    title: 'Count',
+    url: 'http://server/obj/count',
+    method: 'GET',
+    success: next
+});
+requests.push({
+    title: 'Read many',
+    url: 'http://server/obj',
+    method: 'GET',
+    success: next
+});
+requests.push({
+    title: 'Update',
+    method: 'PUT',
+    doOnResult: function(result) {
+        requests[index].url = 'http://server/obj/' + id;
+    },
+    jsonData: {
+        attribute: 'an other value'
+    },
+    success: next
+});
+requests.push({
+    title: 'Read one',
+    method: 'GET',
+    doOnResult: function(result) {
+        requests[index].url = 'http://server/obj/' + id;
+    },
+    success: next
+});
+requests.push({
+    title: 'Delete',
+    method: 'DELETE',
+    doOnResult: function(result) {
+        requests[index].url = 'http://server/obj/' + id;
+    },
+    success: next
+});
+requests.push({
+    title: 'Count',
+    url: 'http://server/obj/count',
+    method: 'GET',
+    success: next
+});
+requests.push({
+    title: 'Read many',
+    url: 'http://server/obj',
+    method: 'GET',
+    success: next
+});
+next();
+</script>
+</body>
+</html>
