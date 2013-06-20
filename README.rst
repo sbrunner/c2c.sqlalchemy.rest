@@ -35,7 +35,7 @@ In ``<project>/views/rest.py``:
     def obj_read_one(request):
         return obj.read_one(request)
 
-    @view_config(route_name='obj_count', renderer='jsonp')
+    @view_config(route_name='obj_count', renderer='string')
     def obj_count(request):
         return obj.count(request)
 
