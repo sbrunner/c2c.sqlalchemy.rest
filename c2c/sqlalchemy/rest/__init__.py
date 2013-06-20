@@ -9,7 +9,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from pyramid.response import Response
 from pyramid.security import has_permission
 from pyramid.httpexceptions import HTTPNotFound, HTTPForbidden
-
+from geoalchemy.postgis import PGPersistentSpatialElement
+from shapely.wkb import loads as loadsWKB
 
 def add_rest_routes(config, route_name_prefix, base_url, create=True):
     route_name = route_name_prefix + '_read_many'
@@ -53,6 +54,8 @@ class REST(object):
                 attr = attr.isoformat()
             elif isinstance(attr, _AssociationList):
                 attr = list(attr)
+            elif isinstance(attr, PGPersistentSpatialElement):
+                attr = loadsWKB(str(attr.geom_wkb))
             properties[col] = attr
         properties[self.id] = getattr(obj, self.id)
         return properties
