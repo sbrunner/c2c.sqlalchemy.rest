@@ -11,7 +11,7 @@ install_requires = [
     'pyramid',
     'sqlalchemy',
     'geoalchemy',
-    'shaply',
+    'shapely',
 ]
 
 tests_require = [
