@@ -60,6 +60,72 @@ In ``<project>/__init__.py``:
     config.add_renderer('jsonp', JSONP(param_name='callback'))
     add_rest_routes(config, 'obj', '/object')
 
+Using Relationships
+-------------------
+
+It is possible to retrieve related objects with ``read_many`` and ``read_one``
+actions provided that the relationships are defined in the models and that
+they are passed to the REST constructor. For instance:
+
+.. code:: python
+
+    class Tag(GeoInterface, Base):
+        __tablename__ = 'tag'
+        __table_args__ = (
+            UniqueConstraint('name'),
+            {"schema": 'tagging'}
+        )
+        __acl__ = [
+            (Allow, 'admin', ALL_PERMISSIONS),
+            (Allow, 'editor', ('view', 'edit', 'new', 'delete')),
+            (Allow, Everyone, ('view')),
+        ]
+        id = Column(types.Integer, primary_key=True)
+        name = Column(types.Unicode(200), nullable=False)
+        active = Column(types.Boolean, default=True)
+        l10n = relationship("TagL10n", backref="tag")
+        childrenTags = relationship("Tag",
+                secondary=tag_tag,
+                primaryjoin=id==tag_tag.c.tag_id1,
+                secondaryjoin=id==tag_tag.c.tag_id2,
+                order_by=name, backref="parentTags")
+
+.. code:: python
+
+    tag_children = { 
+        'childrenTags': { 'rest': REST(DBSession, Tag) }
+    }
+    tag = REST(DBSession, Tag, children=tag_children)
+
+The name of the property containing the related objects may be specified
+using the ``propname`` parameter (default is the relationship name):
+
+.. code:: python
+
+    tag_children = { 
+        'childrenTags': { 'rest': REST(DBSession, Tag), 'propname': 'tags' }
+    }
+    tag = REST(DBSession, Tag, children=tag_children)
+
+Example result:
+
+.. code:: javascript
+
+    {
+        "active": false,
+        "tags": [{
+            "active": true,
+            "name": "Artenschutz",
+            "id": 31
+        }, {
+            "active": false,
+            "name": "Pioniervegetation",
+            "id": 71
+        }],
+        "name": "Naturschutz",
+        "id": 58
+    }
+
 From source
 -----------
 

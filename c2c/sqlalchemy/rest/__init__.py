@@ -4,11 +4,11 @@ import datetime
 from json import loads
 from sqlalchemy.orm.util import class_mapper
 from sqlalchemy.ext.associationproxy import _AssociationList
-from sqlalchemy.orm.properties import ColumnProperty
+from sqlalchemy.orm.properties import ColumnProperty, RelationshipProperty
 from sqlalchemy.orm.exc import NoResultFound
 from pyramid.response import Response
 from pyramid.security import has_permission
-from pyramid.httpexceptions import HTTPNotFound, HTTPForbidden
+from pyramid.httpexceptions import HTTPNotFound, HTTPForbidden, HTTPBadRequest
 from geoalchemy.postgis import PGPersistentSpatialElement
 from shapely.wkb import loads as loadsWKB
 
@@ -29,11 +29,12 @@ def add_rest_routes(config, route_name_prefix, base_url, create=True):
 
 
 class REST(object):
-    def __init__(self, session, mapped_class):
+    def __init__(self, session, mapped_class, children=None):
         self.session = session
         self.mapped_class = mapped_class
 
         self.columns = []
+        self.relationships = {}
         self.id = None
 
         for p in class_mapper(mapped_class).iterate_properties:
@@ -45,6 +46,14 @@ class REST(object):
                     self.id = p.key
                 elif not col.foreign_keys:
                     self.columns.append(p.key)
+            elif children is not None and \
+                    isinstance(p, RelationshipProperty) and \
+                    p.key in children.keys():
+                rel = children[p.key]
+                if 'rest' not in rel or not isinstance(rel['rest'], REST):
+                    raise HTTPBadRequest("Missing REST object for relationship %s"
+                        % p.key)
+                self.relationships[p.key] = rel
 
     def _properties(self, obj):
         properties = {}
@@ -58,6 +67,12 @@ class REST(object):
                 attr = loadsWKB(str(attr.geom_wkb))
             properties[col] = attr
         properties[self.id] = getattr(obj, self.id)
+        for key in self.relationships:
+            rel = self.relationships[key]
+            data = [rel['rest']._properties(o) for o in getattr(obj, key)]
+            propname = rel['propname'] if 'propname' in rel else key
+            properties[propname] = data
+            
         return properties
 
     def read_many(self, request):
