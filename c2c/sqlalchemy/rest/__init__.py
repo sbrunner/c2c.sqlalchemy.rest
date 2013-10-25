@@ -2,6 +2,7 @@
 
 import datetime
 from json import loads
+from sqlalchemy import or_
 from sqlalchemy.orm.util import class_mapper
 from sqlalchemy.ext.associationproxy import _AssociationList
 from sqlalchemy.orm.properties import ColumnProperty, RelationshipProperty
@@ -112,15 +113,32 @@ class REST(object):
             return self.session().query(self.mapped_class).count()
         raise HTTPForbidden()
 
+    def _fill_properties(self, request, session, obj):
+        body = loads(request.body)
+        for col in self.columns:
+            if col in body:
+                setattr(obj, col, body[col])
+        for key in self.relationships:
+            rel = self.relationships[key]
+            propname = rel['propname'] if 'propname' in rel else key
+            if propname in body:
+                ids = body[propname]
+                if not isinstance(ids, list):
+                    ids = [ids]
+                if len(ids) > 0:
+                    rest = rel['rest']
+                    clause = or_(*[getattr(rest.mapped_class, rest.id)==int(id) for id in ids])
+                    children = session.query(rest.mapped_class).filter(clause).all()
+                else:
+                    children = []
+                setattr(obj, key, children)
+
     def create(self, request):
         if has_permission('new', self.mapped_class, request) \
                 or not hasattr(self.mapped_class, '__acl__'):
-            body = loads(request.body)
             session = self.session()
             obj = self.mapped_class()
-            for col in self.columns:
-                if col in body:
-                    setattr(obj, col, body[col])
+            self._fill_properties(request, session, obj)
             session.add(obj)
             session.flush()
             request.response.status_int = 201
@@ -132,10 +150,7 @@ class REST(object):
                 or not hasattr(self.mapped_class, '__acl__'):
             session = self.session()
             obj = self._read_one(request, session)
-            body = loads(request.body)
-            for col in self.columns:
-                if col in body:
-                    setattr(obj, col, body[col])
+            self._fill_properties(request, session, obj)
             session.flush()
             return Response(status_int=202)
         raise HTTPForbidden()
