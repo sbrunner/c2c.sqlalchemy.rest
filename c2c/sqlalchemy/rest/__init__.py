@@ -23,6 +23,8 @@ def add_rest_routes(config, route_name_prefix, base_url, create=True):
     if create:
         route_name = route_name_prefix + '_create'
         config.add_route(route_name, base_url, request_method='POST')
+        route_name = route_name_prefix + '_auto'
+        config.add_route(route_name, base_url + '/auto', request_method='POST')
     route_name = route_name_prefix + '_update'
     config.add_route(route_name, base_url + '/{id:\\d+}', request_method='PUT')
     route_name = route_name_prefix + '_delete'
@@ -113,8 +115,10 @@ class REST(object):
             return self.session().query(self.mapped_class).count()
         raise HTTPForbidden()
 
-    def _fill_properties(self, request, session, obj):
+    def _fill_properties(self, request, session, obj, set_id=False):
         body = loads(request.body)
+        if set_id and self.id in body:
+            setattr(obj, self.id, body[self.id])
         for col in self.columns:
             if col in body:
                 setattr(obj, col, body[col])
@@ -153,6 +157,42 @@ class REST(object):
             self._fill_properties(request, session, obj)
             session.flush()
             return Response(status_int=202)
+        raise HTTPForbidden()
+
+    def auto(self, request):
+        if has_permission('edit', self.mapped_class, request) \
+                or not hasattr(self.mapped_class, '__acl__'):
+            session = self.session()
+            obj = None
+            body = loads(request.body)
+            
+            if self.id not in body:
+                raise HTTPBadRequest('Mandatory attribute %s is missing'
+                    % self.id)
+            
+            try:
+                id = int(body[self.id])
+            except:
+                raise HTTPBadRequest('Attribute %s must be an integer'
+                    % self.id)
+            query = session.query(self.mapped_class)
+            query = query.filter(getattr(self.mapped_class, self.id) == id)
+            try:
+                obj = query.one()
+            except NoResultFound:
+                pass
+
+            if obj is None:
+                obj = self.mapped_class()
+                self._fill_properties(request, session, obj, True)
+                session.add(obj)
+                status_int=201
+            else:
+                self._fill_properties(request, session, obj)
+                status_int=202
+            
+            session.flush()
+            return Response(status_int=status_int)
         raise HTTPForbidden()
 
     def delete(self, request):
