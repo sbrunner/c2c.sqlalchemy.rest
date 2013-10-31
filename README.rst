@@ -47,6 +47,10 @@ In ``<project>/views/rest.py``:
     def obj_update(request):
         return obj.update(request)
 
+    @view_config(route_name='obj_auto')
+    def obj_auto(request):
+        return obj.auto(request)
+
     @view_config(route_name='obj_delete', renderer='jsonp')
     def obj_delete(request):
         return obj.delete(request)
@@ -137,7 +141,7 @@ Build::
 Protocol
 --------
 
-Read many, ``GET`` on ``.../obj``:
+* Read many, ``GET`` on ``.../obj``:
 
 .. code:: javascript
 
@@ -151,7 +155,7 @@ Read many, ``GET`` on ``.../obj``:
         ]
     }
 
-Read one, ``GET`` on ``.../obj/{id}``:
+* Read one, ``GET`` on ``.../obj/{id}``:
 
 .. code:: javascript
 
@@ -161,13 +165,13 @@ Read one, ``GET`` on ``.../obj/{id}``:
         ...
     }
 
-Count, ``GET`` on ``.../obj/count``:
+* Count, ``GET`` on ``.../obj/count``:
 
 .. code:: javascript
 
     23
 
-Create, ``POST`` on ``.../obj`` with data:
+* Create, ``POST`` on ``.../obj`` with data:
 
 .. code:: javascript
 
@@ -178,7 +182,7 @@ Create, ``POST`` on ``.../obj`` with data:
 
 and it will return the id.
 
-Update, ``PUT`` on ``.../obj/{id}`` with data:
+* Update, ``PUT`` on ``.../obj/{id}`` with data:
 
 .. code:: javascript
 
@@ -187,4 +191,17 @@ Update, ``PUT`` on ``.../obj/{id}`` with data:
         ...
     }
 
-Delete, ``DELETE`` on ``.../obj/{id}``.
+* Auto, ``POST`` on ``.../obj/auto`` with data:
+
+.. code:: javascript
+
+    {
+        "id": id,
+        "property": "value",
+        ...
+    }
+
+If an object matches the given id, it will be updated, else a new object is
+automatically created with the given id value.
+
+* Delete, ``DELETE`` on ``.../obj/{id}``.
