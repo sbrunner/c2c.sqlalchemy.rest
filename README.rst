@@ -64,6 +64,23 @@ In ``<project>/__init__.py``:
     config.add_renderer('jsonp', JSONP(param_name='callback'))
     add_rest_routes(config, 'obj', '/object')
 
+Additional properties
+---------------------
+
+It is possible to add some extra properties by defining in the model an
+``__additional_properties__`` function. For instance:
+
+.. code:: python
+
+    class Object(Base):
+
+        @property
+        def __additional_properties__(self):
+            l10n = {}
+            for l in self.l10n:
+                l10n[l.lang.code] = l.value
+            return { "l10n": l10n } 
+
 Using Relationships
 -------------------
 
