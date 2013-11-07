@@ -64,22 +64,36 @@ In ``<project>/__init__.py``:
     config.add_renderer('jsonp', JSONP(param_name='callback'))
     add_rest_routes(config, 'obj', '/object')
 
+Controlling what attributes to display
+--------------------------------------
+
+One may restrict the displayed attributes to a subset by passing an
+``attr_list`` argument to the constructor. By default all attributes are
+displayed. For instance:
+
+.. code:: python
+
+    obj = REST(DBSession, Object, attr_list=['id', 'name'])
+
 Additional properties
 ---------------------
 
 It is possible to add some extra properties by defining in the model an
-``__additional_properties__`` function. For instance:
+``__additional_properties__`` function with an ``attr_list`` argument.
+For instance:
 
 .. code:: python
 
     class Object(Base):
 
-        @property
-        def __additional_properties__(self):
-            l10n = {}
-            for l in self.l10n:
-                l10n[l.lang.code] = l.value
-            return { "l10n": l10n } 
+        def __additional_properties__(self, attr_list=None):
+            properties = {}
+            if attr_list is None or 'l10n' in attr_list:
+                l10n = {}
+                for l in self.l10n:
+                    l10n[l.lang.code] = l.value
+                properties.update({ "l10n": l10n })
+            return properties
 
 Using Relationships
 -------------------
