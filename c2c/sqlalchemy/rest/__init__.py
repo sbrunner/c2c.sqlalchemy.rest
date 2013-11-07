@@ -72,10 +72,15 @@ class REST(object):
         properties[self.id] = getattr(obj, self.id)
         for key in self.relationships:
             rel = self.relationships[key]
-            data = [rel['rest']._properties(o) for o in getattr(obj, key)]
+            attr = getattr(obj, key)
+            if hasattr(attr, '__iter__'):
+                data = [rel['rest']._properties(o) for o in attr]
+            else:
+                data = rel['rest']._properties(attr)
             propname = rel['propname'] if 'propname' in rel else key
             properties[propname] = data
-            
+        if hasattr(obj, '__additional_properties__'):
+            properties.update(obj.__additional_properties__)
         return properties
 
     def read_many(self, request):
