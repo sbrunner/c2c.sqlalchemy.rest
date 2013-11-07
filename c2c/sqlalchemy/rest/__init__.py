@@ -32,9 +32,10 @@ def add_rest_routes(config, route_name_prefix, base_url, create=True):
 
 
 class REST(object):
-    def __init__(self, session, mapped_class, children=None):
+    def __init__(self, session, mapped_class, children=None, attr_list=None):
         self.session = session
         self.mapped_class = mapped_class
+        self.attr_list = attr_list
 
         self.columns = []
         self.relationships = {}
@@ -47,7 +48,8 @@ class REST(object):
                 col = p.columns[0]
                 if col.primary_key:
                     self.id = p.key
-                elif not col.foreign_keys:
+                elif not col.foreign_keys and \
+                        attr_list is None or p.key in attr_list:
                     self.columns.append(p.key)
             elif children is not None and \
                     isinstance(p, RelationshipProperty) and \
@@ -69,7 +71,8 @@ class REST(object):
             elif isinstance(attr, PGPersistentSpatialElement):
                 attr = loadsWKB(str(attr.geom_wkb))
             properties[col] = attr
-        properties[self.id] = getattr(obj, self.id)
+        if self.attr_list is None or self.id in self.attr_list:
+            properties[self.id] = getattr(obj, self.id)
         for key in self.relationships:
             rel = self.relationships[key]
             attr = getattr(obj, key)
@@ -80,7 +83,7 @@ class REST(object):
             propname = rel['propname'] if 'propname' in rel else key
             properties[propname] = data
         if hasattr(obj, '__additional_properties__'):
-            properties.update(obj.__additional_properties__)
+            properties.update(obj.__additional_properties__(self.attr_list))
         return properties
 
     def read_many(self, request):
