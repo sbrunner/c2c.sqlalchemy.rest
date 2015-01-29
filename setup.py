@@ -26,6 +26,7 @@ setup(
     version='0.3',
     description='Add a REST interface to simple SQLAlchemy object',
     long_description=README,
+    namespace_packages=['c2c'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
