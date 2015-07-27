@@ -38,7 +38,7 @@ README = open(os.path.join(here, "README.rst")).read()
 install_requires = [
     "pyramid",
     "SQLAlchemy",
-    "GeoAlchemy",
+    "GeoAlchemy2",
     "Shapely",
 ]
 
