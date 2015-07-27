@@ -1,2 +1,3 @@
-.installed.cfg
-c2c.sqlalchemy.rest.egg-info
+/c2c.sqlalchemy.rest.egg-info
+/dist
+/.build
