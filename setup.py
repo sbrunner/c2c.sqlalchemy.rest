@@ -23,7 +23,7 @@ tests_require = [
 
 setup(
     name='c2c.sqlalchemy.rest',
-    version='0.3',
+    version='0.4',
     description='Add a REST interface to simple SQLAlchemy object',
     long_description=README,
     namespace_packages=['c2c'],
