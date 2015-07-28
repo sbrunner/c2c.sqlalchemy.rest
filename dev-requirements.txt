@@ -1,0 +1,9 @@
+--index-url http://pypi.camptocamp.net/pypi
+setuptools>=8.0
+nose
+nosexcover
+ipdbplugin
+unittest2
+flake8
+pep8-naming
+flake8-copyright
